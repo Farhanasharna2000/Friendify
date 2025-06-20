@@ -29,7 +29,8 @@ export async function signup(req, res) {
     }
 
     const idx = Math.floor(Math.random() * 100) + 1; //generate random number between 1 and 100
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`; //generate random avatar url
+    // const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`; //generate random avatar url
+     const randomAvatar = `https://i.pravatar.cc/150?img=${idx}`;
 
     const newUser = await User.create({
       fullName,

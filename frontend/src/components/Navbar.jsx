@@ -17,7 +17,7 @@ const Navbar = () => {
         <div className="flex items-center justify-end w-full">
           {/* LOGO - ONLY IN THE CHAT PAGE */}
           {isChatPage && (
-            <div className="pl-5">
+            <div className="pl-5 hidden md:block">
               <Link to="/" className="flex items-center gap-2.5">
                 <ShipWheelIcon className="size-9 text-[#FF9900]" />
                 <span className="text-3xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-[#097054] to-[#FF9900]  tracking-wider">
@@ -26,7 +26,14 @@ const Navbar = () => {
               </Link>
             </div>
           )}
-
+          <div className="pl-5 md:hidden block">
+            <Link to="/" className="flex items-center gap-2.5">
+              <ShipWheelIcon className="size-9 text-[#FF9900]" />
+              <span className="text-3xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-[#097054] to-[#FF9900]  tracking-wider">
+                Friendify
+              </span>
+            </Link>
+          </div>
           <div className="flex items-center gap-3 sm:gap-4 ml-auto">
             <Link to={"/notifications"}>
               <button className="btn btn-ghost btn-circle">
