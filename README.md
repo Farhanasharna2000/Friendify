@@ -6,9 +6,9 @@ Friendify is a modern social networking application that enables users to **conn
 
 ## 🚀 Features
 
-- 👥 Send and manage friend requests
-- 💬 Real-time chat using Stream Chat
-- 🎥 One-on-one video calling support
+- Send and manage friend requests
+- Real-time chat using Stream Chat
+- One-on-one video calling support
 
 ---
 
