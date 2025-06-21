@@ -56,7 +56,7 @@ const Login = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder="hello@example.com"
+                      placeholder="Enter Your Email"
                       className="input input-bordered w-full"
                       value={loginData.email}
                       onChange={(e) =>

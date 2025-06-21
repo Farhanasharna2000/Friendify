@@ -12,6 +12,7 @@ import Layout from "./components/Layout.jsx";
 import { useThemeStore } from "./store/useThemeStore.js";
 import ChatPage from './pages/ChatPage';
 import Friends from "./pages/Friends.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 
 const App = () => {
   const { isLoading, authUser } = useAuthUser();
@@ -74,6 +75,18 @@ const App = () => {
             isAuthenticated && isOnBoarded ? (
               <Layout showSidebar={true}>
                 <Notifications />
+              </Layout>
+            ) : (
+              <Navigate to={!isAuthenticated ? "/login" : "/onboarding"} />
+            )
+          }
+        />
+            <Route
+          path="/profile"
+          element={
+            isAuthenticated && isOnBoarded ? (
+              <Layout showSidebar={true}>
+                <ProfilePage />
               </Layout>
             ) : (
               <Navigate to={!isAuthenticated ? "/login" : "/onboarding"} />

@@ -1,66 +1,88 @@
-import { useState } from "react";
-import useAuthUser from "../hooks/useAuthUser";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { completeOnboarding } from "../lib/api";
 import {
   CameraIcon,
   LoaderIcon,
+  MapPinIcon,
   ShipWheelIcon,
   ShuffleIcon,
 } from "lucide-react";
 import { COUNTRIES, LANGUAGES } from "../constants";
+import useAuthUser from "../hooks/useAuthUser";
+import { axiosInstance } from "../lib/axios";
 
-const Onboarding = () => {
-  const { authUser } = useAuthUser();
+const updateUserProfile = async (data) => {
+  const res = await axiosInstance.put("/users/profile", data);
+  return res.data;
+};
+
+const ProfilePage = () => {
   const queryClient = useQueryClient();
+  const { authUser, isLoading } = useAuthUser();
+
   const [formState, setFormState] = useState({
-    fullName: authUser?.fullName || "",
-    bio: authUser?.bio || "",
-    nativeLanguage: authUser?.nativeLanguage || "",
-    learningLanguage: authUser?.learningLanguage || "",
-    location: authUser?.location || "",
-    profilePic: authUser?.profilePic || "",
+    fullName: "",
+    bio: "",
+    nativeLanguage: "",
+    learningLanguage: "",
+    location: "",
+    profilePic: "",
   });
 
-  const { mutate: onboardingMutation, isPending } = useMutation({
-    mutationFn: completeOnboarding,
+  useEffect(() => {
+    if (authUser) {
+      setFormState({
+        fullName: authUser.fullName || "",
+        bio: authUser.bio || "",
+        nativeLanguage: authUser.nativeLanguage || "",
+        learningLanguage: authUser.learningLanguage || "",
+        location: authUser.location || "",
+        profilePic: authUser.profilePic || "",
+      });
+    }
+  }, [authUser]);
+
+  const { mutate: updateProfile, isPending } = useMutation({
+    mutationFn: updateUserProfile,
     onSuccess: () => {
-      toast.success("Profile Onboarded Successfully");
+      toast.success("Profile updated successfully");
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
-
     onError: (error) => {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Update failed");
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    onboardingMutation(formState);
+    updateProfile(formState);
   };
 
   const handleRandomAvatar = () => {
-    const idx = Math.floor(Math.random() * 100) + 1; // 1-100 included
-    // const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const idx = Math.floor(Math.random() * 100) + 1;
     const randomAvatar = `https://i.pravatar.cc/150?img=${idx}`;
-
-    setFormState({ ...formState, profilePic: randomAvatar });
+    setFormState((prev) => ({ ...prev, profilePic: randomAvatar }));
     toast.success("Random profile picture generated!");
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center mt-10 font-medium">Loading profile...</div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-base-100 flex items-center justify-center p-4">
-      <div className="card bg-base-200 w-full max-w-3xl shadow-xl">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="card w-full  shadow-xl">
         <div className="card-body p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-center text-[#FF9900] mb-6">
-            Complete Your Profile
+            Update Your Profile
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* PROFILE PIC CONTAINER */}
+            {/* Profile Picture */}
             <div className="flex flex-col items-center justify-center space-y-4">
-              {/* IMAGE PREVIEW */}
               <div className="size-32 rounded-full bg-base-300 overflow-hidden">
                 {formState.profilePic ? (
                   <img
@@ -74,19 +96,17 @@ const Onboarding = () => {
                   </div>
                 )}
               </div>
-              {/* Generate Random Avatar BTN */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleRandomAvatar}
-                  className="btn bg-[#FF9900] hover:bg-[#e68a00] text-white"
-                >
-                  <ShuffleIcon className="size-4 mr-2" />
-                  Generate Random Avatar
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleRandomAvatar}
+                className="btn bg-[#FF9900] hover:bg-[#e68a00] text-white"
+              >
+                <ShuffleIcon className="size-4 mr-2" />
+                Generate Random Avatar
+              </button>
             </div>
-            {/* FULL NAME */}
+
+            {/* Full Name */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Full Name</span>
@@ -103,7 +123,7 @@ const Onboarding = () => {
               />
             </div>
 
-            {/* BIO */}
+            {/* Bio */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Bio</span>
@@ -118,9 +138,9 @@ const Onboarding = () => {
                 placeholder="Tell others about yourself and your language learning goals"
               />
             </div>
-            {/* LANGUAGES */}
+
+            {/* Languages */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* NATIVE LANGUAGE */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text">Native Language</span>
@@ -145,7 +165,6 @@ const Onboarding = () => {
                 </select>
               </div>
 
-              {/* LEARNING LANGUAGE */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text">Learning Language</span>
@@ -170,29 +189,33 @@ const Onboarding = () => {
                 </select>
               </div>
             </div>
-            {/* LOCATION */}
+
+            {/* Location */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Location</span>
               </label>
-              <select
-                name="location"
-                value={formState.location}
-                onChange={(e) =>
-                  setFormState({ ...formState, location: e.target.value })
-                }
-                className="select select-bordered w-full"
-              >
-                <option value="">Select your country</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country.code} value={country.name}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <MapPinIcon className="absolute top-1/2 transform -translate-y-1/2 left-3 size-5 text-base-content opacity-70 pointer-events-none" />
+                <select
+                  name="location"
+                  value={formState.location}
+                  onChange={(e) =>
+                    setFormState({ ...formState, location: e.target.value })
+                  }
+                  className="select select-bordered w-full pl-10"
+                >
+                  <option value="">Select your country</option>
+                  {COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            {/* SUBMIT BUTTON */}
 
+            {/* Submit Button */}
             <button
               className="btn bg-[#097054] hover:bg-[#065c44] w-full"
               disabled={isPending}
@@ -201,12 +224,12 @@ const Onboarding = () => {
               {!isPending ? (
                 <>
                   <ShipWheelIcon className="size-5 mr-2" />
-                  Complete Onboarding
+                  Save Changes
                 </>
               ) : (
                 <>
                   <LoaderIcon className="animate-spin size-5 mr-2" />
-                  Onboarding...
+                  Updating...
                 </>
               )}
             </button>
@@ -217,4 +240,4 @@ const Onboarding = () => {
   );
 };
 
-export default Onboarding;
+export default ProfilePage;

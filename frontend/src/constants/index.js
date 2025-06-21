@@ -177,6 +177,7 @@ export const LANGUAGES = [
   "Italian",
   "Turkish",
   "Dutch",
+  "Bangla",
 ];
 
 export const LANGUAGE_TO_FLAG = {
@@ -194,4 +195,23 @@ export const LANGUAGE_TO_FLAG = {
   italian: "it",
   turkish: "tr",
   dutch: "nl",
+  bangla: "bd",
 };
+
+export const COUNTRIES = [
+  { name: "Bangladesh", code: "bd" },
+  { name: "United States", code: "us" },
+  { name: "United Kingdom", code: "gb" },
+  { name: "France", code: "fr" },
+  { name: "Germany", code: "de" },
+  { name: "China", code: "cn" },
+  { name: "Japan", code: "jp" },
+  { name: "Korea", code: "kr" },
+  { name: "India", code: "in" },
+  { name: "Russia", code: "ru" },
+  { name: "Portugal", code: "pt" },
+  { name: "Saudi Arabia", code: "sa" },
+  { name: "Italy", code: "it" },
+  { name: "Turkey", code: "tr" },
+  { name: "Netherlands", code: "nl" },
+];

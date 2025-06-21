@@ -9,7 +9,7 @@ export async function getRecommendedUsers(req, res) {
     const recommendedUsers = await User.find({
       $and: [
         { _id: { $ne: currentUserId } }, //exclude myself/user
-        {_id: { $nin: currentUser.friends } }, //exclude my/user friends
+        { _id: { $nin: currentUser.friends } }, //exclude my/user friends
         { isOnBoarded: true },
       ],
     });
@@ -155,5 +155,50 @@ export async function getOutgoingFriendReq(req, res) {
   } catch (error) {
     console.error("Error in getOutgoingFriendReq controller", error.message);
     res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+//getprofile
+export async function getUserProfile(req, res) {
+  try {
+    const user = await User.findById(req.user.id).select(
+      "fullName bio profilePic nativeLanguage learningLanguage location email"
+    );
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error in getUserProfile", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+// update profile
+export async function updateUserProfile(req, res) {
+  try {
+    const {
+      fullName,
+      bio,
+      profilePic,
+      nativeLanguage,
+      learningLanguage,
+      location,
+    } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.fullName = fullName ?? user.fullName;
+    user.bio = bio ?? user.bio;
+    user.profilePic = profilePic ?? user.profilePic;
+    user.nativeLanguage = nativeLanguage ?? user.nativeLanguage;
+    user.learningLanguage = learningLanguage ?? user.learningLanguage;
+    user.location = location ?? user.location;
+
+    await user.save();
+
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    console.error("Error in updateUserProfile", error);
+    res.status(500).json({ message: "Server error" });
   }
 }
