@@ -54,12 +54,7 @@ const ChatPage = () => {
           tokenData.token
         );
 
-        //
         const channelId = [authUser._id, targetUserId].sort().join("-");
-
-        // you and me
-        // if i start the chat => channelId: [myId, yourId]
-        // if you start the chat => channelId: [yourId, myId]  => [myId,yourId]
 
         const currChannel = client.channel("messaging", channelId, {
           members: [authUser._id, targetUserId],
@@ -80,15 +75,23 @@ const ChatPage = () => {
     initChat();
   }, [tokenData, authUser, targetUserId]);
 
-  const handleVideoCall = () => {
+  const handleVideoCall = async () => {
     if (channel) {
       const callUrl = `${window.location.origin}/call/${channel.id}`;
 
-      channel.sendMessage({
-        text: `I've started a video call. Join me here: ${callUrl}`,
-      });
+      try {
+        await channel.sendMessage({
+          text: `I've started a video call. Join me here: ${callUrl}`,
+        });
 
-      toast.success("Video call link sent successfully!");
+        toast.success("Redirecting to video call...");
+
+        // Redirect immediately
+        window.location.href = callUrl;
+      } catch (error) {
+        toast.error("Failed to start video call.");
+        console.error("Error sending video call link:", error);
+      }
     }
   };
 
@@ -112,4 +115,5 @@ const ChatPage = () => {
     </div>
   );
 };
+
 export default ChatPage;
