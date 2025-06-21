@@ -1,21 +1,35 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api";
-import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
+import {
+  BellIcon,
+  ClockIcon,
+  MessageSquareIcon,
+  UserCheckIcon,
+} from "lucide-react";
 import NoNotificationsFound from "../components/NoNotificationsFound";
 
 const Notifications = () => {
   const queryClient = useQueryClient();
+  const [acceptingRequestId, setAcceptingRequestId] = useState(null);
 
   const { data: friendRequests, isLoading } = useQuery({
     queryKey: ["friendRequests"],
     queryFn: getFriendRequests,
   });
 
-  const { mutate: acceptRequestMutation, isPending } = useMutation({
+  const { mutate: acceptRequestMutation } = useMutation({
     mutationFn: acceptFriendRequest,
+    onMutate: (requestId) => {
+      setAcceptingRequestId(requestId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friendRequests"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
+      setAcceptingRequestId(null);
+    },
+    onError: () => {
+      setAcceptingRequestId(null);
     },
   });
 
@@ -25,7 +39,9 @@ const Notifications = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="container mx-auto max-w-4xl space-y-8">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6 text-[#FF9900] ">Notifications</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6 text-[#FF9900]">
+          Notifications
+        </h1>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -35,10 +51,12 @@ const Notifications = () => {
           <>
             {incomingRequests.length > 0 && (
               <section className="space-y-4">
-                <h2 className="text-xl  font-semibold flex items-center gap-2">
-                  <UserCheckIcon className="size-5 " />
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <UserCheckIcon className="size-5" />
                   Friend Requests
-                  <span className="badge badge-secondary ml-2">{incomingRequests.length}</span>
+                  <span className="badge badge-secondary ml-2">
+                    {incomingRequests.length}
+                  </span>
                 </h2>
 
                 <div className="space-y-3">
@@ -51,10 +69,15 @@ const Notifications = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="avatar size-14 rounded-full bg-base-300">
-                              <img src={request.sender.profilePic} alt={request.sender.fullName} />
+                              <img
+                                src={request.sender.profilePic}
+                                alt={request.sender.fullName}
+                              />
                             </div>
                             <div>
-                              <h3 className="font-semibold">{request.sender.fullName}</h3>
+                              <h3 className="font-semibold">
+                                {request.sender.fullName}
+                              </h3>
                               <div className="flex flex-wrap gap-1.5 mt-1">
                                 <span className="badge badge-secondary badge-sm">
                                   Native: {request.sender.nativeLanguage}
@@ -67,11 +90,15 @@ const Notifications = () => {
                           </div>
 
                           <button
-                            className="btn bg-[#097054] hover:bg-[#065c44]  btn-sm"
-                            onClick={() => acceptRequestMutation(request._id)}
-                            disabled={isPending}
+                            className="btn bg-[#097054] hover:bg-[#065c44] btn-sm"
+                            onClick={() =>
+                              acceptRequestMutation(request._id)
+                            }
+                            disabled={acceptingRequestId === request._id}
                           >
-                            Accept
+                            {acceptingRequestId === request._id
+                              ? "Accepting..."
+                              : "Accept"}
                           </button>
                         </div>
                       </div>
@@ -81,7 +108,6 @@ const Notifications = () => {
               </section>
             )}
 
-            {/* ACCEPTED REQS NOTIFICATONS */}
             {acceptedRequests.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -91,7 +117,10 @@ const Notifications = () => {
 
                 <div className="space-y-3">
                   {acceptedRequests.map((notification) => (
-                    <div key={notification._id} className="card bg-base-200 shadow-sm">
+                    <div
+                      key={notification._id}
+                      className="card bg-base-200 shadow-sm"
+                    >
                       <div className="card-body p-4">
                         <div className="flex items-start gap-3">
                           <div className="avatar mt-1 size-10 rounded-full">
@@ -101,9 +130,12 @@ const Notifications = () => {
                             />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-semibold">{notification.recipient.fullName}</h3>
+                            <h3 className="font-semibold">
+                              {notification.recipient.fullName}
+                            </h3>
                             <p className="text-sm my-1">
-                              {notification.recipient.fullName} accepted your friend request
+                              {notification.recipient.fullName} accepted your
+                              friend request
                             </p>
                             <p className="text-xs flex items-center opacity-70">
                               <ClockIcon className="size-3 mr-1" />
@@ -122,13 +154,13 @@ const Notifications = () => {
               </section>
             )}
 
-            {incomingRequests.length === 0 && acceptedRequests.length === 0 && (
-              <NoNotificationsFound />
-            )}
+            {incomingRequests.length === 0 &&
+              acceptedRequests.length === 0 && <NoNotificationsFound />}
           </>
         )}
       </div>
     </div>
   );
 };
+
 export default Notifications;

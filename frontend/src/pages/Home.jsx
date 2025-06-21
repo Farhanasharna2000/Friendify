@@ -22,6 +22,7 @@ import NoFriendsFound from "../components/NoFriendsFound";
 const HomePage = () => {
   const queryClient = useQueryClient();
   const [outgoingRequestsIds, setOutgoingRequestsIds] = useState(new Set());
+  const [currentlySendingId, setCurrentlySendingId] = useState(null); 
 
   const { data: friends = [], isLoading: loadingFriends } = useQuery({
     queryKey: ["friends"],
@@ -38,10 +39,17 @@ const HomePage = () => {
     queryFn: getOutgoingFriendReqs,
   });
 
-  const { mutate: sendRequestMutation, isPending } = useMutation({
+  const { mutate: sendRequestMutation } = useMutation({
     mutationFn: sendFriendRequest,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] }),
+    onSuccess: (_data, recipientId) => {
+      
+      setOutgoingRequestsIds((prev) => new Set(prev).add(recipientId));
+      setCurrentlySendingId(null); 
+      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+    },
+    onError: () => {
+      setCurrentlySendingId(null);
+    },
   });
 
   useEffect(() => {
@@ -113,6 +121,7 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
+                const isThisButtonSending = currentlySendingId === user._id;
 
                 return (
                   <div
@@ -138,7 +147,6 @@ const HomePage = () => {
                         </div>
                       </div>
 
-                      {/* Languages with flags */}
                       <div className="flex flex-wrap gap-1.5">
                         <span className="badge badge-secondary">
                           {getLanguageFlag(user.nativeLanguage)}
@@ -154,17 +162,19 @@ const HomePage = () => {
                         <p className="text-sm opacity-70">{user.bio}</p>
                       )}
 
-                      {/* Action button */}
                       <button
                         className={`btn w-full mt-2 ${
-                          hasRequestBeenSent
+                          hasRequestBeenSent || isThisButtonSending
                             ? "btn-disabled"
                             : "bg-[#097054] hover:bg-[#065c44]"
-                        } `}
-                        onClick={() => sendRequestMutation(user._id)}
-                        disabled={hasRequestBeenSent || isPending}
+                        }`}
+                        onClick={() => {
+                          setCurrentlySendingId(user._id);
+                          sendRequestMutation(user._id);
+                        }}
+                        disabled={hasRequestBeenSent || isThisButtonSending}
                       >
-                        {hasRequestBeenSent ? (
+                        {hasRequestBeenSent || isThisButtonSending ? (
                           <>
                             <CheckCircleIcon className="size-4 mr-2" />
                             Request Sent
